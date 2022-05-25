@@ -17,6 +17,7 @@ async function run() {
     try {
         await client.connect();
         const toolsCollection = client.db('infinity-tools-house').collection('tools');
+        const ordersCollection = client.db('infinity-tools-house').collection('orders');
 
         app.get('/tools', async (req, res) => {
             const query = {};
@@ -30,6 +31,12 @@ async function run() {
             const query = { _id: ObjectId(id) };
             const tool = await toolsCollection.findOne(query);
             res.send(tool);
+        });
+
+        app.post('/orders', async (req, res) => {
+            const order = req.body;
+            const result = await ordersCollection.insertOne(order);
+            res.send(result);
         })
     }
     finally {
