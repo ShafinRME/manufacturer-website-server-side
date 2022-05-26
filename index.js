@@ -18,6 +18,7 @@ async function run() {
         await client.connect();
         const toolsCollection = client.db('infinity-tools-house').collection('tools');
         const ordersCollection = client.db('infinity-tools-house').collection('orders');
+        const usersCollection = client.db('infinity-tools-house').collection('users');
 
         app.get('/tools', async (req, res) => {
             const query = {};
@@ -25,6 +26,18 @@ async function run() {
             const tools = await cursor.toArray();
             res.send(tools);
         });
+
+        app.put('/user/:email', async (req, res) => {
+            const email = req.params.email;
+            const user = req.body;
+            const filter = { email: email };
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: user,
+            };
+            const result = await usersCollection.updateOne(filter, updateDoc, options);
+            res.send(result);
+        })
 
         app.get('/purchase/:id', async (req, res) => {
             const id = req.params.id;
