@@ -43,7 +43,7 @@ async function run() {
             res.send(tools);
         });
 
-        app.get('/user', async (req, res) => {
+        app.get('/user', verifyJWT, async (req, res) => {
             const users = await usersCollection.find().toArray();
             res.send(users);
         })
@@ -59,6 +59,16 @@ async function run() {
             const result = await usersCollection.updateOne(filter, updateDoc, options);
             const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' })
             res.send({ result, token });
+        });
+
+        app.put('/user/admin/:email', verifyJWT, async (req, res) => {
+            const email = req.params.email;
+            const filter = { email: email };
+            const updateDoc = {
+                $set: { role: 'admin' },
+            };
+            const result = await usersCollection.updateOne(filter, updateDoc);
+            res.send(result);
         })
 
         app.get('/purchase/:id', async (req, res) => {
