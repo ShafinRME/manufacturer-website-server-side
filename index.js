@@ -3,6 +3,9 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+
+
 const port = process.env.PORT || 5000;
 const app = express();
 
@@ -36,6 +39,21 @@ async function run() {
         const ordersCollection = client.db('infinity-tools-house').collection('orders');
         const usersCollection = client.db('infinity-tools-house').collection('users');
         const reviewsCollection = client.db('infinity-tools-house').collection('reviews');
+        const paymentCollection = client.db('infinity-tools-house').collection('payments');
+        const myselfCollection = client.db('infinity-tools-house').collection('myself');
+
+
+        app.post('/create-payment-intent', verifyJWT, async (req, res) => {
+            const service = req.body;
+            const price = service.price;
+            const amount = price * 100;
+            const paymentIntent = await stripe.paymentIntents.create({
+                amount: amount,
+                currency: 'usd',
+                payment_method_types: ['card']
+            });
+            res.send({ clientSecret: paymentIntent.client_secret })
+        });
 
         app.get('/tools', async (req, res) => {
             const query = {};
@@ -66,6 +84,11 @@ async function run() {
         app.post('/reviews', async (req, res) => {
             const newReviews = req.body;
             const result = await reviewsCollection.insertOne(newReviews);
+            res.send(result);
+        })
+        app.post('/myself', async (req, res) => {
+            const myself = req.body;
+            const result = await myselfCollection.insertOne(myself);
             res.send(result);
         })
 
@@ -129,8 +152,6 @@ async function run() {
             res.send(tool);
         });
 
-
-
         app.post('/orders', async (req, res) => {
             const order = req.body;
             const result = await ordersCollection.insertOne(order);
@@ -148,6 +169,29 @@ async function run() {
                 return res.status(403).send({ message: 'Forbidden Access' });
             }
 
+        })
+
+        app.get('/order/:id', verifyJWT, async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const order = await ordersCollection.findOne(query);
+            res.send(order);
+        })
+
+        app.patch('/order/:id', verifyJWT, async (req, res) => {
+            const id = req.params.id;
+            const payment = req.body;
+            const filter = { _id: ObjectId(id) };
+            const updatedDoc = {
+                $set: {
+                    paid: true,
+                    transectionId: payment.transectionId
+                }
+            }
+
+            const result = await paymentCollection.insertOne(payment);
+            const updatedOder = await ordersCollection.updateOne(filter, updatedDoc);
+            res.send(updatedOrder);
         })
     }
     finally {
