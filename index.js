@@ -42,6 +42,12 @@ async function run() {
             const tools = await cursor.toArray();
             res.send(tools);
         });
+        app.get('/allorders', async (req, res) => {
+            const query = {};
+            const cursor = ordersCollection.find(query);
+            const orders = await cursor.toArray();
+            res.send(orders);
+        });
 
         app.get('/user', verifyJWT, async (req, res) => {
             const users = await usersCollection.find().toArray();
