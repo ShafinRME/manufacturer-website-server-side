@@ -33,10 +33,18 @@ async function run() {
             res.send(tool);
         });
 
+
+
         app.post('/orders', async (req, res) => {
             const order = req.body;
             const result = await ordersCollection.insertOne(order);
-            res.send(result);
+            return res.send({ success: true, result });
+        });
+        app.get('/order', async (req, res) => {
+            const buyer = req.query.buyerEmail;
+            const query = { buyerEmail: buyer };
+            const orders = await ordersCollection.find(query).toArray();
+            res.send(orders);
         })
     }
     finally {
