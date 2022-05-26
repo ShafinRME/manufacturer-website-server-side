@@ -35,6 +35,7 @@ async function run() {
         const toolsCollection = client.db('infinity-tools-house').collection('tools');
         const ordersCollection = client.db('infinity-tools-house').collection('orders');
         const usersCollection = client.db('infinity-tools-house').collection('users');
+        const reviewsCollection = client.db('infinity-tools-house').collection('reviews');
 
         app.get('/tools', async (req, res) => {
             const query = {};
@@ -42,6 +43,15 @@ async function run() {
             const tools = await cursor.toArray();
             res.send(tools);
         });
+
+        app.get('/reviews', async (req, res) => {
+            const query = {};
+            const cursor = reviewsCollection.find(query);
+            const reviews = await cursor.toArray();
+            res.send(reviews);
+        })
+
+
         app.get('/allorders', async (req, res) => {
             const query = {};
             const cursor = ordersCollection.find(query);
